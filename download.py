@@ -15,11 +15,11 @@ if sys.argv[1] == "physio":
         t.extractall(path="data/physio")
 
 elif sys.argv[1] == "pm25":
-    url = "https://www.microsoft.com/en-us/research/wp-content/uploads/2016/06/STMVL-Release.zip"
-    urlData = requests.get(url).content
+    #url = "https://www.microsoft.com/en-us/research/wp-content/uploads/2016/06/STMVL-Release.zip"
+    #urlData = requests.get(url).content
     filename = "data/STMVL-Release.zip"
-    with open(filename, mode="wb") as f:
-        f.write(urlData)
+    #with open(filename, mode="wb") as f:
+        #f.write(urlData)
     with zipfile.ZipFile(filename) as z:
         z.extractall("data/pm25")
         
