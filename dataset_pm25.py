@@ -121,7 +121,7 @@ class PM25_Dataset(Dataset):
         tmp_data = torch.tensor(ob_data).to(torch.float64)
         itp_data = torch.where(ob_mask == 0, float('nan'), tmp_data).to(torch.float32)
         itp_data = torchcde.linear_interpolation_coeffs(itp_data.permute(1, 0).unsqueeze(-1)).squeeze(-1).permute(1, 0)
-        coeffs=itp_data
+        coeffs=itp_data.numpy()
 
         s = {
             "observed_data": ob_data,
