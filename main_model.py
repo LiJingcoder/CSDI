@@ -114,7 +114,7 @@ class CSDI_base(nn.Module):
         return loss_sum / self.num_steps
 
     def calc_loss(
-        self, observed_data, cond_mask, observed_mask, side_info, is_train, set_t=-1
+        self, observed_data, cond_mask, observed_mask, side_info, is_train, set_t=-1,coeffs
     ):
         B, K, L = observed_data.shape
         if is_train != 1:  # for validation
@@ -125,7 +125,7 @@ class CSDI_base(nn.Module):
         noise = torch.randn_like(observed_data)
         noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
 
-        total_input = self.set_input_to_diffmodel(noisy_data, observed_data, cond_mask)
+        total_input = self.set_input_to_diffmodel(noisy_data, coeffs, cond_mask)
 
         predicted = self.diffmodel(total_input, side_info, t)  # (B,K,L)
 
@@ -135,11 +135,12 @@ class CSDI_base(nn.Module):
         loss = (residual ** 2).sum() / (num_eval if num_eval > 0 else 1)
         return loss
 
-    def set_input_to_diffmodel(self, noisy_data, observed_data, cond_mask):
+    def set_input_to_diffmodel(self, noisy_data,coeffs, cond_mask):
         if self.is_unconditional == True:
             total_input = noisy_data.unsqueeze(1)  # (B,1,K,L)
         else:
-            cond_obs = (cond_mask * observed_data).unsqueeze(1)
+            #cond_obs = (cond_mask * observed_data).unsqueeze(1)
+            cond_obs = coeffs
             noisy_target = ((1 - cond_mask) * noisy_data).unsqueeze(1)
             total_input = torch.cat([cond_obs, noisy_target], dim=1)  # (B,2,K,L)
 
@@ -194,6 +195,7 @@ class CSDI_base(nn.Module):
             gt_mask,
             for_pattern_mask,
             _,
+            coeffs,
         ) = self.process_data(batch)
         if is_train == 0:
             cond_mask = gt_mask
@@ -208,7 +210,7 @@ class CSDI_base(nn.Module):
 
         loss_func = self.calc_loss if is_train == 1 else self.calc_loss_valid
 
-        return loss_func(observed_data, cond_mask, observed_mask, side_info, is_train)
+        return loss_func(observed_data, cond_mask, observed_mask, side_info, is_train,coeffs)
 
     def evaluate(self, batch, n_samples):
         (
