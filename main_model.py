@@ -103,12 +103,12 @@ class CSDI_base(nn.Module):
         return side_info
 
     def calc_loss_valid(
-        self, observed_data, cond_mask, observed_mask, side_info, is_train
+        self, observed_data, cond_mask, observed_mask, side_info, is_train,coeffs
     ):
         loss_sum = 0
         for t in range(self.num_steps):  # calculate loss for all t
             loss = self.calc_loss(
-                observed_data, cond_mask, observed_mask, side_info, is_train, set_t=t
+                observed_data, cond_mask, observed_mask, side_info, is_train, set_t=t,coeffs
             )
             loss_sum += loss.detach()
         return loss_sum / self.num_steps
@@ -146,7 +146,7 @@ class CSDI_base(nn.Module):
 
         return total_input
 
-    def impute(self, observed_data, cond_mask, side_info, n_samples):
+    def impute(self, observed_data, cond_mask, side_info, n_samples,coeffs):
         B, K, L = observed_data.shape
 
         imputed_samples = torch.zeros(B, n_samples, K, L).to(self.device)
@@ -168,7 +168,8 @@ class CSDI_base(nn.Module):
                     diff_input = cond_mask * noisy_cond_history[t] + (1.0 - cond_mask) * current_sample
                     diff_input = diff_input.unsqueeze(1)  # (B,1,K,L)
                 else:
-                    cond_obs = (cond_mask * observed_data).unsqueeze(1)
+                    #cond_obs = (cond_mask * observed_data).unsqueeze(1)
+                    cond_obs = coeffs
                     noisy_target = ((1 - cond_mask) * current_sample).unsqueeze(1)
                     diff_input = torch.cat([cond_obs, noisy_target], dim=1)  # (B,2,K,L)
                 predicted = self.diffmodel(diff_input, side_info, torch.tensor([t]).to(self.device))
