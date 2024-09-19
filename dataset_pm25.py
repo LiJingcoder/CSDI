@@ -123,7 +123,7 @@ class PM25_Dataset(Dataset):
         coeffs=itp_data
 
         s = {
-            "observed_data": ob_data
+            "observed_data": ob_data,
             "observed_mask": self.observed_mask[c_month][
                 c_index : c_index + self.eval_length
             ],
