@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, Dataset
 import pandas as pd
 import numpy as np
 import torch
-
+import torchcde
 
 class PM25_Dataset(Dataset):
     def __init__(self, eval_length=36, target_dim=36, mode="train", validindex=0):
@@ -114,10 +114,16 @@ class PM25_Dataset(Dataset):
         c_index = self.position_in_month[index]
         hist_month = self.index_month_histmask[index]
         hist_index = self.position_in_month_histmask[index]
+
+        ob_data = self.observed_data[c_month][c_index : c_index + self.eval_length]
+        ob_mask = self.observed_mask[c_month][c_index:c_index + self.eval_length]
+        tmp_data = torch.tensor(ob_data).to(torch.float64)
+        itp_data = torch.where(ob_mask == 0, float('nan'), tmp_data).to(torch.float32)
+        itp_data = torchcde.linear_interpolation_coeffs(itp_data.permute(1, 0).unsqueeze(-1)).squeeze(-1).permute(1, 0)
+        coeffs=itp_data
+
         s = {
-            "observed_data": self.observed_data[c_month][
-                c_index : c_index + self.eval_length
-            ],
+            "observed_data": ob_data
             "observed_mask": self.observed_mask[c_month][
                 c_index : c_index + self.eval_length
             ],
@@ -129,6 +135,7 @@ class PM25_Dataset(Dataset):
             ],
             "timepoints": np.arange(self.eval_length),
             "cut_length": self.cut_length[org_index],
+            "coeffs":coeffs
         }
 
         return s
