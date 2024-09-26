@@ -221,6 +221,7 @@ class CSDI_base(nn.Module):
             gt_mask,
             _,
             cut_length,
+            coeffs,
         ) = self.process_data(batch)
 
         with torch.no_grad():
@@ -229,7 +230,7 @@ class CSDI_base(nn.Module):
 
             side_info = self.get_side_info(observed_tp, cond_mask)
 
-            samples = self.impute(observed_data, cond_mask, side_info, n_samples)
+            samples = self.impute(observed_data, cond_mask, side_info, n_samples,coeffs)
 
             for i in range(len(cut_length)):  # to avoid double evaluation
                 target_mask[i, ..., 0 : cut_length[i].item()] = 0
